@@ -2,12 +2,16 @@
 #include <vector>
 #include <libint2.hpp>
 #include <Eigen/Core>
+#include <libint2/diis.h>
 
 #include "common.hpp"
 #include "MolecularSystem.hpp"
 #include "BasisFunctions.hpp"
 
+
 namespace wf_solver {
+
+typedef libint2::DIIS<MatrixXReal> DIIS;
 
 class BasisFunctionsImpl: public BasisFunctions
 {
@@ -21,6 +25,8 @@ public:
     virtual MatrixXReal compute_nuclear_attraction_matrix() const;
     virtual MatrixXReal compute_fock_2body_matrix(const MatrixXReal &D) const;
     virtual size_t nbasis() const;
+
+    virtual MatrixXReal compute_fock_2body_matrix_parallel(const MatrixXReal &D, size_t threads = 1) const;
 private:
     const MolecularSystem &system_;
     const std::string &basis_set_type_;

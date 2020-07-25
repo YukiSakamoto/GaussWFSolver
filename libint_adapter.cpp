@@ -1,5 +1,6 @@
 #include "libint_adapter.hpp"
 #include <cstdio>
+#include <thread>
 
 namespace wf_solver {
 
@@ -20,8 +21,8 @@ void BasisFunctionsImpl::update_molecules_()
     // generate basis functions
     this->shells_.clear();
     std::copy(bfs_temp.begin(), bfs_temp.end(), std::back_inserter(this->shells_));
-    std::copy(this->shells_.begin(), this->shells_.end(), 
-            std::ostream_iterator<libint2::Shell>(std::cout, " "));
+    //std::copy(this->shells_.begin(), this->shells_.end(), 
+    //        std::ostream_iterator<libint2::Shell>(std::cout, " "));
     this->map_shell_to_basis_function_();
 }
 
@@ -157,6 +158,104 @@ MatrixXReal BasisFunctionsImpl::compute_fock_2body_matrix(const MatrixXReal &D) 
                 }
             }
         }
+    }
+    return G;
+}
+
+MatrixXReal BasisFunctionsImpl::compute_fock_2body_matrix_parallel(const MatrixXReal &D, size_t threads) const
+{
+    size_t nbasis = this->nbasis();
+    MatrixXReal G = MatrixXReal::Zero(nbasis,nbasis);
+
+    std::vector<MatrixXReal> G_per_threads;
+    std::vector<libint2::Engine> engine_per_threads;
+    for(size_t i = 0; i < threads; i++) {
+        engine_per_threads.push_back(libint2::Engine(libint2::Operator::coulomb, max_nprim(shells_), max_l(shells_)) );
+        G_per_threads.push_back(MatrixXReal::Zero(nbasis, nbasis));
+    }
+
+    auto lambda = [&](size_t thread_id) {
+
+        size_t s1234 = 0;
+        const auto& buf = engine_per_threads[thread_id].results();
+        for(size_t s1 = 0; s1 < shells_.size(); s1++) {
+            size_t bf1_first = this->shell2bf_[s1]; // the index of the basis function corresponds to shell i
+            size_t n1  = shells_[s1].size();
+            for(size_t s2 = 0; s2 < shells_.size(); s2++) {
+                size_t bf2_first = this->shell2bf_[s2];
+                size_t n2  = shells_[s2].size();
+                for(size_t s3 = 0; s3 < shells_.size(); s3++) {
+                    size_t bf3_first = this->shell2bf_[s3];
+                    size_t n3  = shells_[s3].size();
+                    for(size_t s4 = 0; s4 < shells_.size(); s4++, s1234++) {
+                        size_t bf4_first = this->shell2bf_[s4];
+                        size_t n4  = shells_[s4].size();
+
+                        if (s1234 % threads != thread_id) {
+                            continue;
+                        }
+
+                        //========================================
+                        //  Coulomb Integral
+                        //========================================
+                        engine_per_threads[thread_id].compute(shells_[s1], shells_[s2], shells_[s3], shells_[s4]);
+                        const auto* buf_1234 = buf[0];
+                        if (buf_1234 == nullptr) { continue; }
+
+                        size_t f1234 = 0;
+                        for(size_t f1=0; f1 != n1; f1++) {
+                            const size_t bf1 = f1 + bf1_first;
+                            for(size_t f2 = 0; f2 != n2; f2++) {
+                                const size_t bf2 = f2 + bf2_first;
+                                for(size_t f3 = 0; f3 != n3; f3++) {
+                                    const size_t bf3 = f3 + bf3_first;
+                                    for(size_t f4 = 0; f4 != n4; f4++, f1234++) {
+                                        const size_t bf4 = f4 + bf4_first;
+                                        G_per_threads[thread_id](bf1, bf2) += D(bf3, bf4) * buf_1234[f1234];
+                                    }
+                                }
+                            }
+                        }
+                        //========================================
+                        //  Exchange Integral
+                        //========================================
+                        engine_per_threads[thread_id].compute(shells_[s1], shells_[s3], shells_[s2], shells_[s4]);
+                        const auto* buf_1324 = buf[0];
+                        size_t f1324 = 0;
+                        for(size_t f1 = 0; f1 != n1; f1++) {
+                            const size_t bf1 = f1 + bf1_first;
+                            for(size_t f3 = 0; f3 != n3; f3++) {
+                                const size_t bf3 = f3 + bf3_first;
+                                for(size_t f2 = 0; f2 != n2; f2++) {
+                                    const size_t bf2 = f2 + bf2_first;
+                                    for(size_t f4 = 0; f4 != n4; f4++, f1324++) {
+                                        const size_t bf4 = f4 + bf4_first;
+                                        G_per_threads[thread_id](bf1, bf2) -= D(bf3, bf4) * 0.5 * buf_1324[f1324];
+                                    }
+                                }
+                            }
+                        }
+
+                    }
+                }
+            }
+        }
+    };
+    std::vector<std::thread> thread_list;
+    for(size_t i = 0; i < threads; i++) {
+        if (i != threads - 1) {
+            thread_list.push_back(std::thread(lambda, i) );
+        } else {
+            lambda(i);
+        }
+    }
+    for(size_t i = 0; i < threads; i++) {
+        if (i != threads - 1) {
+            thread_list[i].join();
+        }
+    }
+    for(size_t i = 0; i < threads; i++) {
+        G += G_per_threads[i];
     }
     return G;
 }

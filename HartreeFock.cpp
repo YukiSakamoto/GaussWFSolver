@@ -64,7 +64,6 @@ REAL HartreeFock::calculate_E0(
 bool HartreeFock::compute() {
     integral_engine_init(true);
 
-    //BasisFunctionsImpl bf(system_, "sto-3g");
     BasisFunctionsImpl bf(system_, "6-31G");
     size_t nao = bf.nbasis(); // number of basis_set. 
     int num_occ_orbitals = system_.num_electrons() / 2;
@@ -74,18 +73,27 @@ bool HartreeFock::compute() {
     MatrixXReal T = bf.compute_kinetic_matrix();
     MatrixXReal V = bf.compute_nuclear_attraction_matrix();
     MatrixXReal Hcore = T + V;
-    std::cout << "1 electron integrals done" << std::endl;
     MatrixXReal X = canonical_orthogonalization(S);
     REAL nei = this->system_.nuclear_repulsion();
     std::cout << "NEI: " << nei << std::endl;
 
-    std::printf("%4s  %17s  %17s  %17s\n", "i", "Etot", "Energy", "MaxDP");
+    DIIS diis(2);
+
+    std::printf("%4s  %17s  %17s  %17s  %17s\n", "i", "Etot", "Energy", "DEtot", "MaxDP");
     // Initial guess is 0, at present.
     MatrixXReal D = MatrixXReal::Zero(nao, nao);
+    REAL Etot_prev = 0.;
     for(int i = 0; i < 100; i++) {
-        MatrixXReal G = bf.compute_fock_2body_matrix(D);
+        //MatrixXReal G = bf.compute_fock_2body_matrix(D);
+        MatrixXReal G = bf.compute_fock_2body_matrix_parallel(D, 6);
         MatrixXReal F = Hcore + G;
-        MatrixXReal F_prim = X.adjoint() * F * X;
+
+        MatrixXReal F_ext = F;  // extrapolated;
+        if (this->use_diis_ == true) {
+            MatrixXReal FD_comm = F*D*S-S*D*F;
+            diis.extrapolate(F_ext, FD_comm);
+        }
+        MatrixXReal F_prim = X.adjoint() * F_ext * X;
         Eigen::SelfAdjointEigenSolver<MatrixXReal> es(F_prim);
         if (es.info() != Eigen::Success) {  throw;  }
 
@@ -94,19 +102,19 @@ bool HartreeFock::compute() {
         MatrixXReal C_new_prime = es.eigenvectors();
         MatrixXReal C_new = X * C_new_prime;
         MatrixXReal D_new = this->form_D(C_new, num_occ_orbitals);
-        REAL maxdp = 0.;
-        REAL rmsdp = 0.;
         REAL E0  = this->calculate_E0(D, Hcore, F);
         REAL Etot= E0 + nei;
-        rmsdp = this->check_scf_convergence(D_new, D, &maxdp);
-
-        std::printf("#%03d  %17.10f  %17.10f  %17.10f\n", i, Etot, E0, maxdp);
+        REAL maxdp = 0.;
+        REAL rmsdp = this->check_scf_convergence(D_new, D, &maxdp);
+        REAL dEtot = Etot_prev - Etot;
+        std::printf("#%03d  %17.10f  %17.10f  %17.10f  %17.10f\n", i, Etot, E0, dEtot, maxdp);
         if (rmsdp < 1.0e-8) {
             this->scf_convergence_ = true;
             this->energy_ = Etot;
             break;
         } else {
             D = D_new;
+            Etot_prev = Etot;
         }
     }
 
