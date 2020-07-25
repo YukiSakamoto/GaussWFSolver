@@ -33,14 +33,15 @@ public:
     virtual MatrixXReal compute_fock_2body_matrix(const MatrixXReal &D) const;
     virtual size_t nbasis() const;
 private:
-    // use libint2
     const MolecularSystem &system_;
     const std::string &basis_set_type_;
 
-    std::vector<libint2::Atom> atom_;   // this is used for libint2;
-    std::vector<libint2::Shell> shells_;
+    std::vector<libint2::Atom> atom_;       // this is used for libint2;
+    libint2::BasisSet shells_;
+    std::vector<size_t> shell2bf_;          // first index of the basis function 
 
     void update_molecules_();
+    void map_shell_to_basis_function_();
     MatrixXReal compute_1body_ints(const libint2::Operator obtype) const;
 };
 
