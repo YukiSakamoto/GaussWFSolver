@@ -5,20 +5,9 @@
 
 #include "common.hpp"
 #include "MolecularSystem.hpp"
+#include "BasisFunctions.hpp"
 
 namespace wf_solver {
-
-class BasisFunctions
-{
-public:
-    BasisFunctions() {}
-    virtual ~BasisFunctions(){};
-    virtual MatrixXReal compute_overlap_matrix() const = 0;
-    virtual MatrixXReal compute_kinetic_matrix() const = 0;
-    virtual MatrixXReal compute_nuclear_attraction_matrix() const = 0;
-    virtual MatrixXReal compute_fock_2body_matrix(const MatrixXReal &D) const = 0;
-    virtual size_t nbasis() const = 0;
-};
 
 class BasisFunctionsImpl: public BasisFunctions
 {
@@ -67,15 +56,4 @@ int max_l(const std::vector<libint2::Shell> &shells) {
     return l;
 }
 
-std::vector<libint2::Atom> convert_molecules(const MolecularSystem &mol_sys);
-std::vector<size_t> map_shell_to_basis_function(const std::vector<libint2::Shell> &shells);
-
-MatrixXReal compute_1body_ints(const std::vector<libint2::Shell> &shells, 
-        const libint2::Operator obtype, const std::vector<libint2::Atom> &atoms);
-MatrixXReal compute_fock_2body_matrix(const std::vector<libint2::Shell> &shells, const MatrixXReal &D);
-
-MatrixXReal compute_overlap_matrix(const std::vector<libint2::Shell> &shells);
-MatrixXReal compute_kinetic_matrix(const std::vector<libint2::Shell> &shells);
-MatrixXReal compute_nuclear_attraction_matrix(
-        const std::vector<libint2::Shell> &shells, const std::vector<libint2::Atom> &atoms);
 };

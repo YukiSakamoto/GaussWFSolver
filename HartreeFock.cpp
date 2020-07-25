@@ -64,7 +64,8 @@ REAL HartreeFock::calculate_E0(
 bool HartreeFock::compute() {
     integral_engine_init(true);
 
-    BasisFunctionsImpl bf(system_, "sto-3g");
+    //BasisFunctionsImpl bf(system_, "sto-3g");
+    BasisFunctionsImpl bf(system_, "6-31G");
     size_t nao = bf.nbasis(); // number of basis_set. 
     int num_occ_orbitals = system_.num_electrons() / 2;
     std::cout << num_occ_orbitals << std::endl;
@@ -78,7 +79,7 @@ bool HartreeFock::compute() {
     REAL nei = this->system_.nuclear_repulsion();
     std::cout << "NEI: " << nei << std::endl;
 
-    std::printf("%2s\t%10s\t%10s\t\n", "i", "Energy", "MaxDP");
+    std::printf("%4s  %17s  %17s  %17s\n", "i", "Etot", "Energy", "MaxDP");
     // Initial guess is 0, at present.
     MatrixXReal D = MatrixXReal::Zero(nao, nao);
     for(int i = 0; i < 100; i++) {
@@ -96,11 +97,13 @@ bool HartreeFock::compute() {
         REAL maxdp = 0.;
         REAL rmsdp = 0.;
         REAL E0  = this->calculate_E0(D, Hcore, F);
+        REAL Etot= E0 + nei;
         rmsdp = this->check_scf_convergence(D_new, D, &maxdp);
 
-        std::printf("%02d\t%10.8f\t%10.8f\t \n", i, E0, maxdp);
+        std::printf("#%03d  %17.10f  %17.10f  %17.10f\n", i, Etot, E0, maxdp);
         if (rmsdp < 1.0e-8) {
             this->scf_convergence_ = true;
+            this->energy_ = Etot;
             break;
         } else {
             D = D_new;

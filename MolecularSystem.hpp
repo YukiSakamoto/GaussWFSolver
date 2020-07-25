@@ -7,10 +7,6 @@
 #include <numeric>
 #include <algorithm>
 
-#include <libint2.hpp>
-
-
-
 namespace wf_solver {
 
 class MolecularSystem

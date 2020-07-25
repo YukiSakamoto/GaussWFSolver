@@ -171,20 +171,6 @@ void integral_engine_finalize()
     libint2::finalize();
 }
 
-std::vector<libint2::Atom> convert_molecules(const MolecularSystem &mol_sys)
-{
-    std::vector<libint2::Atom> ret;
-    for(int i = 0; i < mol_sys.size(); i++) {
-        libint2::Atom atom;
-        std::array<REAL,3> pos = mol_sys.atom_position(i);
-        atom.atomic_number = mol_sys.atomic_number(i);
-        atom.x = pos[0];
-        atom.y = pos[1];
-        atom.z = pos[2];
-        ret.push_back(atom);
-    }
-    return ret;
-}
 
 
 };
