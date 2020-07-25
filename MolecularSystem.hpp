@@ -13,19 +13,6 @@
 
 namespace wf_solver {
 
-class BasisFunctions {
-public:
-    size_t naos() const 
-    {   return this->number_of_aos_;     }
-
-    size_t nshells() const 
-    {   return this->shells_.size();    }
-    
-private:
-    size_t number_of_aos_;
-    std::vector<libint2::Shell> shells_;
-};
-
 class MolecularSystem
 {
 public:

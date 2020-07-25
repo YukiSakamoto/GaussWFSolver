@@ -62,29 +62,28 @@ REAL HartreeFock::calculate_E0(
 }
 
 bool HartreeFock::compute() {
-    integral_engine_init();
-    std::vector<libint2::Atom> atoms = convert_molecules(system_);
-    libint2::BasisSet obs("sto-3g", atoms);
-    size_t nao = 0; // number of basis_set. 
-    for(size_t i = 0; i < obs.size(); i++) { nao += obs[i].size();  }
+    integral_engine_init(true);
+
+    BasisFunctionsImpl bf(system_, "sto-3g");
+    size_t nao = bf.nbasis(); // number of basis_set. 
     int num_occ_orbitals = system_.num_electrons() / 2;
     std::cout << num_occ_orbitals << std::endl;
 
-    MatrixXReal S = compute_overlap_matrix(obs);
-    MatrixXReal T = compute_kinetic_matrix(obs);
-    MatrixXReal V = compute_nuclear_attraction_matrix(obs, atoms);
+    MatrixXReal S = bf.compute_overlap_matrix();
+    MatrixXReal T = bf.compute_kinetic_matrix();
+    MatrixXReal V = bf.compute_nuclear_attraction_matrix();
     MatrixXReal Hcore = T + V;
+    std::cout << "1 electron integrals done" << std::endl;
     MatrixXReal X = canonical_orthogonalization(S);
     REAL nei = this->system_.nuclear_repulsion();
     std::cout << "NEI: " << nei << std::endl;
 
+    std::printf("%2s\t%10s\t%10s\t\n", "i", "Energy", "MaxDP");
     // Initial guess is 0, at present.
     MatrixXReal D = MatrixXReal::Zero(nao, nao);
     for(int i = 0; i < 100; i++) {
-        MatrixXReal G = compute_fock_2body_matrix(obs, D);
-        std::cout << G << std::endl;
+        MatrixXReal G = bf.compute_fock_2body_matrix(D);
         MatrixXReal F = Hcore + G;
-        std::cout << F << std::endl;
         MatrixXReal F_prim = X.adjoint() * F * X;
         Eigen::SelfAdjointEigenSolver<MatrixXReal> es(F_prim);
         if (es.info() != Eigen::Success) {  throw;  }
@@ -97,7 +96,6 @@ bool HartreeFock::compute() {
         REAL maxdp = 0.;
         REAL rmsdp = 0.;
         REAL E0  = this->calculate_E0(D, Hcore, F);
-        std::cout << "E0: " << E0 << std::endl;
         rmsdp = this->check_scf_convergence(D_new, D, &maxdp);
 
         std::printf("%02d\t%10.8f\t%10.8f\t \n", i, E0, maxdp);
