@@ -2,7 +2,7 @@ project(wf_solver CXX)
 cmake_minimum_required(VERSION 2.6)
 
 set(CMAKE_CXX_FLAGS "--std=c++11")
-add_executable(wf_solver libint_adapter.cpp HartreeFock.cpp main.cpp )
+add_executable(wf_solver libint_adapter.cpp HartreeFock.cpp InputParser.cpp main.cpp )
 
 target_link_libraries(wf_solver int2)
 
