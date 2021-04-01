@@ -43,19 +43,21 @@ int main(int argc, char **argv)
     read_xyz_file(xyz_file, mol, title);
 
     if (input_check_required(input) == true) {
-        std::printf(" OK: Input Check Passed\n");
+        std::printf(" OK: Input Check Passed\n\n");
     } else {
-        std::printf(" Error: Essential Keys are not specified\n");
+        std::printf(" Error: Essential Keys are not specified\n\n");
         throw;
     }
 
-    std::printf("#============================================================\n");
-    std::printf("%s\n", title.c_str());
-    std::printf("#============================================================\n");
+    std::printf("# Job Title: \n");
+    std::printf("%s\n\n", title.c_str());
+
+    std::printf("# Input: \n");
     for(wf_solver::InputParser::container_type::const_iterator it = input.data().begin(); it != input.data().end(); it++) {
         std::printf(" %-10s =  %s\n", it->first.c_str(), it->second.c_str() );
     }
-    std::printf("#============================================================\n");
+    std::printf("\n");
+    std::printf("# Input Coordinates\n\n");
 
     for(size_t i = 0; i < mol.size(); i++) {
         std::array<wf_solver::REAL,3> pos( mol.atom_position(i));
@@ -63,7 +65,7 @@ int main(int argc, char **argv)
                 wf_solver::Elements[mol.atomic_number(i)].c_str() , 
                 pos[0] * factor_Bohr2Angstrom, pos[1] * factor_Bohr2Angstrom, pos[2] * factor_Bohr2Angstrom);
     }
-    std::printf("#============================================================\n");
+    std::printf("\n\n");
 
     std::printf("  Entering Hartree Fock  \n");
     wf_solver::HartreeFock hf_scf(mol);
