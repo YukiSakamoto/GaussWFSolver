@@ -79,4 +79,72 @@ bool InputParser::parse()
     return true;
 }
 
+const std::string Elements[] = {
+    "0", 
+    "H", "He", 
+    "Li", "Be", "B", "C", "N", "O", "F", "Ne", 
+    "Na", "Mg", "Al", "Si", "P" , "S", "Cl", "Ar",
+    "K", "Ca", "Sc", "Ti", "V", "Cr", 
+    "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr",
+    "",
+};
+
+int get_atomic_number(const std::string &element)
+{
+    for(int i = 0; Elements[i] != ""; i++) {
+        if (Elements[i] == element) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void
+read_xyz_file(const std::string xyz_filename, MolecularSystem &system, std::string &title)
+{
+    std::ifstream ifs(xyz_filename.c_str(), std::ios::in);
+    if (!ifs.is_open()) {
+        std::cerr << "Error! read_xyz_file(): maybe ths file doesn't exist: " << xyz_filename << std::endl;
+        throw;
+    }
+
+    size_t num_atoms = 0;
+    size_t line_count = 0;
+    while ( !ifs.eof() ) {
+        std::string line_buf;
+        std::vector<std::string> tokens;
+        std::getline(ifs, line_buf); 
+        line_count++;
+
+        if (line_count == 1) {
+            tokens = split_line_by_space(line_buf);
+            // the first line is the number of atoms
+            if (tokens.size()  == 1) { 
+                num_atoms = boost::lexical_cast<int>(tokens[0]);
+            } else {
+                throw; 
+            }
+        } else if (line_count == 2) {
+            title = line_buf;
+        } else {
+            tokens = split_line_by_space(line_buf);
+            if (tokens.size() == 4) {
+                int atomic_number = get_atomic_number(tokens[0]);
+                REAL x = factor_Angstrom2Bohr * ( boost::lexical_cast<REAL>(tokens[1]) );
+                REAL y = factor_Angstrom2Bohr * ( boost::lexical_cast<REAL>(tokens[2]) );
+                REAL z = factor_Angstrom2Bohr * ( boost::lexical_cast<REAL>(tokens[3]) );
+                system.add_atom(atomic_number, x, y, z);
+            } else {
+                continue;
+            }
+        }
+    }
+    if (system.size() != num_atoms) {
+        std::cerr << "Number of atoms are not matched" << std::endl;
+        throw;
+    }
+
+    return;
+}
+
 }

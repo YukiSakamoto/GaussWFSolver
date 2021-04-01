@@ -85,7 +85,7 @@ bool HartreeFock::compute() {
     REAL Etot_prev = 0.;
     for(int i = 0; i < 100; i++) {
         //MatrixXReal G = bf.compute_fock_2body_matrix(D);
-        MatrixXReal G = bf.compute_fock_2body_matrix_parallel(D, 6);
+        MatrixXReal G = bf.compute_fock_2body_matrix_parallel(D, 4);
         MatrixXReal F = Hcore + G;
 
         MatrixXReal F_ext = F;  // extrapolated;

@@ -13,25 +13,31 @@ static const double factor_Angstrom2Bohr = 1.8897259885789;
 
 int main(int argc, char **argv)
 {
-    wf_solver::MolecularSystem mol;
     if (argc < 2) {
         std::cerr << "Input file is not specifies" << std::endl;
         throw;
     }
     std::string input_filename(argv[1]);
-    wf_solver::InputParser input(input_filename);
 
-    std::printf("#==================================================\n");
+    wf_solver::InputParser input(input_filename);
+    wf_solver::MolecularSystem mol;
+    std::string title;
+    std::string xyz_file =  input.data().at("system");
+    read_xyz_file(xyz_file, mol, title);
+
+    std::printf("%s\n", title.c_str());
+    std::printf("#============================================================\n");
     for(wf_solver::InputParser::container_type::const_iterator it = input.data().begin(); it != input.data().end(); it++) {
         std::printf("%-10s =  %s\n", it->first.c_str(), it->second.c_str() );
     }
-    std::printf("#==================================================\n");
+    std::printf("#============================================================\n");
+    for(size_t i = 0; i < mol.size(); i++) {
+        std::array<wf_solver::REAL,3> pos( mol.atom_position(i));
+        std::printf("%3d \t%12.8f\t%12.8f\t%12.8f\n", mol.atomic_number(i), pos[0], pos[1], pos[2]);
+    }
+    std::printf("#============================================================\n");
 
-    mol.add_atom(6,  0., 0., 0.);
-    mol.add_atom(1,  0.000000*factor_Angstrom2Bohr,    0.000000*factor_Angstrom2Bohr,    1.083010*factor_Angstrom2Bohr) ;
-    mol.add_atom(1,  0.000000*factor_Angstrom2Bohr,    1.021071*factor_Angstrom2Bohr,   -0.361003*factor_Angstrom2Bohr) ;
-    mol.add_atom(1,  0.884274*factor_Angstrom2Bohr,   -0.510536*factor_Angstrom2Bohr,   -0.361003*factor_Angstrom2Bohr) ;
-    mol.add_atom(1, -0.884274*factor_Angstrom2Bohr,   -0.510536*factor_Angstrom2Bohr,   -0.361003*factor_Angstrom2Bohr) ;
+    std::printf("  Entering Hartree Fock  \n");
     wf_solver::HartreeFock hf_scf(mol);
     hf_scf.compute();
     if (hf_scf.convergence() == true) {
