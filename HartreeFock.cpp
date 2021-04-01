@@ -62,16 +62,14 @@ REAL HartreeFock::calculate_E0(
 }
 
 bool HartreeFock::compute() {
-    integral_engine_init(true);
 
-    BasisFunctionsImpl bf(system_, "6-31G");
-    size_t nao = bf.nbasis(); // number of basis_set. 
+    size_t nao = bf_.nbasis(); // number of basis_set. 
     int num_occ_orbitals = system_.num_electrons() / 2;
     std::cout << num_occ_orbitals << std::endl;
 
-    MatrixXReal S = bf.compute_overlap_matrix();
-    MatrixXReal T = bf.compute_kinetic_matrix();
-    MatrixXReal V = bf.compute_nuclear_attraction_matrix();
+    MatrixXReal S = bf_.compute_overlap_matrix();
+    MatrixXReal T = bf_.compute_kinetic_matrix();
+    MatrixXReal V = bf_.compute_nuclear_attraction_matrix();
     MatrixXReal Hcore = T + V;
     MatrixXReal X = canonical_orthogonalization(S);
     REAL nei = this->system_.nuclear_repulsion();
@@ -84,8 +82,9 @@ bool HartreeFock::compute() {
     MatrixXReal D = MatrixXReal::Zero(nao, nao);
     REAL Etot_prev = 0.;
     for(int i = 0; i < 100; i++) {
-        //MatrixXReal G = bf.compute_fock_2body_matrix(D);
-        MatrixXReal G = bf.compute_fock_2body_matrix_parallel(D, 4);
+        MatrixXReal G = bf_.compute_fock_2body_matrix(D);
+        //MatrixXReal G = bf_.compute_fock_2body_matrix_parallel(D, 4);
+        std::printf("fock done");
         MatrixXReal F = Hcore + G;
 
         MatrixXReal F_ext = F;  // extrapolated;
@@ -118,7 +117,6 @@ bool HartreeFock::compute() {
         }
     }
 
-    integral_engine_finalize();
     return scf_convergence_;
 };
 

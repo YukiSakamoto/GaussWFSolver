@@ -10,6 +10,7 @@ public:
     virtual MatrixXReal compute_kinetic_matrix() const = 0;
     virtual MatrixXReal compute_nuclear_attraction_matrix() const = 0;
     virtual MatrixXReal compute_fock_2body_matrix(const MatrixXReal &D) const = 0;
+    virtual MatrixXReal compute_fock_2body_matrix_parallel(const MatrixXReal &D, size_t threads ) const = 0;
     virtual size_t nbasis() const = 0;
 };
 

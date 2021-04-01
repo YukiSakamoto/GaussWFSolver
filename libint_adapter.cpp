@@ -4,6 +4,19 @@
 
 namespace wf_solver {
 
+BasisFunctionsImpl::BasisFunctionsImpl(
+        const MolecularSystem &system, const std::string &basis_set_type, bool diagnostic): 
+        system_(system), basis_set_type_(basis_set_type)
+{ 
+    libint2::initialize(diagnostic);
+    this->update_molecules_();
+}
+
+BasisFunctionsImpl::~BasisFunctionsImpl()
+{
+    libint2::finalize();
+}
+
 void BasisFunctionsImpl::update_molecules_()
 {
     this->atom_.clear();
@@ -258,16 +271,6 @@ MatrixXReal BasisFunctionsImpl::compute_fock_2body_matrix_parallel(const MatrixX
         G += G_per_threads[i];
     }
     return G;
-}
-
-void integral_engine_init(bool diagnostic)
-{
-    libint2::initialize(diagnostic);
-}
- 
-void integral_engine_finalize()
-{
-    libint2::finalize();
 }
 
 

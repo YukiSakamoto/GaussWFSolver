@@ -10,8 +10,8 @@ namespace wf_solver {
 class HartreeFock: public SCFBase
 {
 public:
-    HartreeFock(const MolecularSystem &mol, const bool use_diis = true) : 
-        system_(mol), use_diis_(use_diis) {}
+    HartreeFock(const MolecularSystem &mol, const BasisFunctions &bf, const bool use_diis = true) : 
+        system_(mol), bf_(bf), use_diis_(use_diis) {}
     ~HartreeFock() {}
     virtual bool compute();
     virtual bool gradient() { return true; }
@@ -23,6 +23,7 @@ private:    // functions;
     REAL calculate_E0(const MatrixXReal &D, const MatrixXReal &Hcore, const MatrixXReal &F) const;
 private:    //variables;
     const MolecularSystem &system_;
+    const BasisFunctions  &bf_;
     bool use_diis_;
 };
 

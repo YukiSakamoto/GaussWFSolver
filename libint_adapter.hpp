@@ -16,10 +16,9 @@ typedef libint2::DIIS<MatrixXReal> DIIS;
 class BasisFunctionsImpl: public BasisFunctions
 {
 public:
-    BasisFunctionsImpl(const MolecularSystem &system, const std::string &basis_set_type): 
-        system_(system), basis_set_type_(basis_set_type)
-    { this->update_molecules_();}
-    virtual ~BasisFunctionsImpl() {}
+    BasisFunctionsImpl(const MolecularSystem &system, const std::string &basis_set_type, 
+        bool diagnostic = false);
+    virtual ~BasisFunctionsImpl();
     virtual MatrixXReal compute_overlap_matrix() const;
     virtual MatrixXReal compute_kinetic_matrix() const;
     virtual MatrixXReal compute_nuclear_attraction_matrix() const;
@@ -39,9 +38,6 @@ private:
     void map_shell_to_basis_function_();
     MatrixXReal compute_1body_ints(const libint2::Operator obtype) const;
 };
-
-void integral_engine_init(bool diagnostic = false);
-void integral_engine_finalize();
 
 inline size_t max_nprim(const std::vector<libint2::Shell> &shells) {
     size_t n = 0;

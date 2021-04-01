@@ -40,6 +40,7 @@ int main(int argc, char **argv)
     wf_solver::MolecularSystem mol;
     std::string title;
     std::string xyz_file =  input.data().at("system");
+    std::string basis    = input.data().at("basis");
     read_xyz_file(xyz_file, mol, title);
 
     if (input_check_required(input) == true) {
@@ -68,7 +69,8 @@ int main(int argc, char **argv)
     std::printf("\n\n");
 
     std::printf("  Entering Hartree Fock  \n");
-    wf_solver::HartreeFock hf_scf(mol);
+    BasisFunctionsImpl bf(mol, basis, true);
+    wf_solver::HartreeFock hf_scf(mol, bf);
     hf_scf.compute();
     if (hf_scf.convergence() == true) {
         std::printf("Total Energy: %17.10f\n", hf_scf.energy() );
