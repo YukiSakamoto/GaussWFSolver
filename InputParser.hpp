@@ -26,7 +26,8 @@ public:
     {   this->parse();    }
     bool parse();
     void clear();
-    const container_type &data(){   return this->keyword_map_; };
+    const container_type &data() const
+    {   return this->keyword_map_; };
 private:
     std::string input_filename_;
     container_type keyword_map_;
