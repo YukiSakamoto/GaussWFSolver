@@ -10,6 +10,7 @@
 
 
 static const double factor_Angstrom2Bohr = 1.8897259885789;
+static const double factor_Bohr2Angstrom = 1./1.8897259885789;
 
 int main(int argc, char **argv)
 {
@@ -33,7 +34,9 @@ int main(int argc, char **argv)
     std::printf("#============================================================\n");
     for(size_t i = 0; i < mol.size(); i++) {
         std::array<wf_solver::REAL,3> pos( mol.atom_position(i));
-        std::printf("%3d \t%12.8f\t%12.8f\t%12.8f\n", mol.atomic_number(i), pos[0], pos[1], pos[2]);
+        std::printf("%2s \t%12.8f\t%12.8f\t%12.8f\n", 
+                wf_solver::Elements[mol.atomic_number(i)].c_str() , 
+                pos[0] * factor_Bohr2Angstrom, pos[1] * factor_Bohr2Angstrom, pos[2] * factor_Bohr2Angstrom);
     }
     std::printf("#============================================================\n");
 

@@ -79,16 +79,6 @@ bool InputParser::parse()
     return true;
 }
 
-const std::string Elements[] = {
-    "0", 
-    "H", "He", 
-    "Li", "Be", "B", "C", "N", "O", "F", "Ne", 
-    "Na", "Mg", "Al", "Si", "P" , "S", "Cl", "Ar",
-    "K", "Ca", "Sc", "Ti", "V", "Cr", 
-    "Mn", "Fe", "Co", "Ni", "Cu", "Zn", "Ga", "Ge", "As", "Se", "Br", "Kr",
-    "",
-};
-
 int get_atomic_number(const std::string &element)
 {
     for(int i = 0; Elements[i] != ""; i++) {
