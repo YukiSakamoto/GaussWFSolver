@@ -21,11 +21,11 @@ int main(int argc, char **argv)
     std::string input_filename(argv[1]);
     wf_solver::InputParser input(input_filename);
 
-    std::printf("==================================================\n");
+    std::printf("#==================================================\n");
     for(wf_solver::InputParser::container_type::const_iterator it = input.data().begin(); it != input.data().end(); it++) {
-        std::printf("%10s\t%10s\n", it->first.c_str(), it->second.c_str() );
+        std::printf("%-10s =  %s\n", it->first.c_str(), it->second.c_str() );
     }
-    std::printf("==================================================\n");
+    std::printf("#==================================================\n");
 
     mol.add_atom(6,  0., 0., 0.);
     mol.add_atom(1,  0.000000*factor_Angstrom2Bohr,    0.000000*factor_Angstrom2Bohr,    1.083010*factor_Angstrom2Bohr) ;
