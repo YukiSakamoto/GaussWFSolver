@@ -127,10 +127,12 @@ MatrixXReal BasisFunctionsImpl::compute_fock_2body_matrix(const MatrixXReal &D) 
                     size_t bf4_first = this->shell2bf_[s4];
                     size_t n4  = shells_[s4].size();
 
+                    //std::printf("%d: coulomb  %d %d %d %d will calculate\n", __LINE__, s1, s2, s3, s4);
                     //========================================
                     //  Coulomb Integral
                     //========================================
                     engine.compute(shells_[s1], shells_[s2], shells_[s3], shells_[s4]);
+                    //std::printf("%d: coulomb  %d %d %d %d done\n", __LINE__, s1, s2, s3, s4);
                     const auto* buf_1234 = buf[0];
                     if (buf_1234 == nullptr) { continue; }
 
@@ -151,8 +153,10 @@ MatrixXReal BasisFunctionsImpl::compute_fock_2body_matrix(const MatrixXReal &D) 
                     //========================================
                     //  Exchange Integral
                     //========================================
+                    //std::printf("%d: exchange  %d %d %d %d will calculate\n", __LINE__, s1, s2, s3, s4);
                     engine.compute(shells_[s1], shells_[s3], shells_[s2], shells_[s4]);
                     const auto* buf_1324 = buf[0];
+                    if (buf_1324 == nullptr) { continue; }
                     size_t f1324 = 0;
                     for(size_t f1 = 0; f1 != n1; f1++) {
                         const size_t bf1 = f1 + bf1_first;
@@ -167,11 +171,13 @@ MatrixXReal BasisFunctionsImpl::compute_fock_2body_matrix(const MatrixXReal &D) 
                             }
                         }
                     }
+                    //std::printf("%d: exchange  %d %d %d %d done\n", __LINE__, s1, s2, s3, s4);
 
                 }
             }
         }
     }
+    //std::printf("%d: return G\n", __LINE__);
     return G;
 }
 
@@ -234,6 +240,7 @@ MatrixXReal BasisFunctionsImpl::compute_fock_2body_matrix_parallel(const MatrixX
                         //========================================
                         engine_per_threads[thread_id].compute(shells_[s1], shells_[s3], shells_[s2], shells_[s4]);
                         const auto* buf_1324 = buf[0];
+                        if (buf_1324 == nullptr) { continue; }
                         size_t f1324 = 0;
                         for(size_t f1 = 0; f1 != n1; f1++) {
                             const size_t bf1 = f1 + bf1_first;

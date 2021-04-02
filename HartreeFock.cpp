@@ -75,7 +75,7 @@ bool HartreeFock::compute() {
     REAL nei = this->system_.nuclear_repulsion();
     std::cout << "NEI: " << nei << std::endl;
 
-    DIIS diis(2);
+    DIIS diis(5);
 
     std::printf("%4s  %17s  %17s  %17s  %17s\n", "i", "Etot", "Energy", "DEtot", "MaxDP");
     // Initial guess is 0, at present.
@@ -84,7 +84,6 @@ bool HartreeFock::compute() {
     for(int i = 0; i < 100; i++) {
         MatrixXReal G = bf_.compute_fock_2body_matrix(D);
         //MatrixXReal G = bf_.compute_fock_2body_matrix_parallel(D, 4);
-        std::printf("fock done");
         MatrixXReal F = Hcore + G;
 
         MatrixXReal F_ext = F;  // extrapolated;
@@ -94,7 +93,10 @@ bool HartreeFock::compute() {
         }
         MatrixXReal F_prim = X.adjoint() * F_ext * X;
         Eigen::SelfAdjointEigenSolver<MatrixXReal> es(F_prim);
-        if (es.info() != Eigen::Success) {  throw;  }
+        if (es.info() != Eigen::Success) {  
+            std::cerr << "Eigen Solver failed" << std::endl;
+            throw;  
+        }
 
         // Energies and New coefficients 
         VectorXReal e = es.eigenvalues();
